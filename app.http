@@ -1,35 +1,18 @@
-# Get All the list of users
-GET http://localhost:8080/users/
+###
+# API-1 Get All todo's
+GET http://localhost:8080/todos/?priority=HIGH
 
 ###
-
-# Get the specific user details by ID
-GET http://localhost:8080/user/10
+# API-2 Get todo
+GET http://localhost:8080/todos/4
 
 ###
-
-# Add New User
-POST http://localhost:8080/users/
+#API -3 add todo
+POST http://localhost:8080/todos
 Content-Type: application/json
 
 {
-    "first_name": "Raju",
-    "last_name": "Kumar",
-    "age": 27,
-    "city":"London"
+  "todo": "Run",
+  "priority": "MEDIUM",
+  "status": "TO DO"
 }
-
-###
-
-# Updated the user 
-PUT http://localhost:8080/users/10
-Content-Type: application/json
-
-{
-    "last_name": "Dinesh",
-    "age": 22
-}
-
-###
-# Delete the user details
-DELETE http://localhost:8080/users/10

@@ -1,24 +1,16 @@
+// This module is desgined for ToDo's application
+
 const express = require('express');
 const mysql = require('mysql');
-const path = require('path');
+const Joi = require('joi');
 
 const app = express();
-const port = process.env.PORT || 8080; //Enivronmental Variables
+const port = process.env.PORT || 8080;
 
-//this middle function is used to run static HTML page
-app.use(express.static(path.join(__dirname, 'TechVedikaClone'))); 
-
-//used to recognize the incoming request as JSON object and parse it
 app.use(express.json());
 
-// Pool Connection Credentials
-const pool  = mysql.createPool({
-    connectionLimit : 10,
-    host : 'localhost',
-    user : 'root',
-    password: 'Techv1@3',
-    database: 'dinnu'
-});
+const priorityConstants = ["HIGH","MEDIUM","LOW"];
+const statusConstants = ["TO DO", "IN PROGRESS", "DONE"];
 
 const connection = mysql.createConnection({
     connectionLimit : 10,
@@ -28,119 +20,104 @@ const connection = mysql.createConnection({
     database: 'dinnu'
 });
 
-
-connection.connect(function(err) {
-    if (err) {
-      console.error('error connecting: ' + err.stack);
+connection.connect(function(error) {
+    if (error) {
+      console.error('error connecting: ' + error.stack);
       return;
-    }
-   
-    console.log('connected as id ' + connection.threadId);
-  });
-
-
-// Api will send HTML Content as response
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'TechVedikaClone', './index.html')); //sending html file page
+    }   
+    console.log('DB connected');
 });
 
-// Display all the list of users
-app.get("/users/", (req, res) => {
-    connection.query('SELECT * FROM persons;', function (error, results, fields) {
-        if(results.length === 0){
-            res.status(404).send(`No Data Found in the table`);
-        }else{
-            res.send(JSON.stringify(results));
-        }
-      });
-});
 
-// Display the specific user details using user Id
-app.get("/user/:id", (req, res) => {
-    const params = req.params
-    const {id} = params
-    connection.query(`SELECT * FROM persons WHERE id=${id};`, (error, results) => {
-        if (error) {
-            res.status(502).send(`Bad Gateway`);
-        }
-        if (results.length === 0) {
-            res.status(404).send(`No User found with user ID - ${id}`);
-        } else {
-            res.send(JSON.stringify(results));
-        }
-    })
-});
-
-// Add Person Api
-app.post("/users/", (req, res) => {
-    const {first_name, last_name, age, city} = req.body;
-    const addPersonQuery = 
-    `INSERT INTO 
-    persons(first_name, last_name, age, city)
-    VALUES('${first_name}', '${last_name}', ${age}, '${city}');`
-    pool.query(addPersonQuery, (error, result) => {
-        if (error) {
-            res.status(502).send(`Bad Gateway`);
-        }else{
-            res.send(`User added and user id: ${result.insertId}`);
-        }
-    });
-});
-
-app.put("/users/:id", (req, res) => {
-    const {id} = req.params;
-    const bodyObj = req.body;
-   
-    let setQuery = `SET `;
-    for (let key in bodyObj){
-        switch (key) {
-            case 'age':
-                setQuery += (`${key}=${bodyObj[key]},`)
-                break
-            default:
-                setQuery += (`${key}='${bodyObj[key]}',`)
-                break
-        };
-    }
-    setQuery = setQuery.substring(0, setQuery.length-1);
-
-    const updateQuery = `
-    UPDATE persons
-    ${setQuery}
-    WHERE id=${id};
-    `
-
-    pool.query(`SELECT * FROM persons WHERE id=${id};`, (error, results) => {
-        if (error) {
-            res.status(502).send(`Bad Gateway`);
-        }
-        if (results.length === 0) {
-            res.status(404).send(`No User found to update the details with user ID - ${id}`);
-        }
-    });
-
-    pool.query(updateQuery, (error, result) => {
+// API-1 Display all the list of todos with/without filters
+app.get("/todos/", (req, res) => {
+    const queryParams = req.query
+    const query = allTodosQueryWithFilters(queryParams);
+    // console.log(query)
+    connection.query(query, (error, results) => {
         if(error){
-            res.status(502).send(`Bad Gateway`);
-        }else{
-            res.send(`Updated the user details, user id: ${id}`);
+            console.log(error.message);
+            res.status(502);
+            return;
         }
+        res.send(results);
+    });
+});
+
+// Query for getting todo's with/without filters
+const allTodosQueryWithFilters = (queryParams) => {
+    let query = `SELECT * FROM todo `
+
+    if(Object.keys(queryParams).length > 0){
+        let whereClause = `WHERE `
+        for (let key in queryParams){
+            if(key === 'search_q'){
+                whereClause += `todo LIKE '%${queryParams[key]}%' AND `;
+            }else{
+                const valueArr = queryParams[key].split(",");
+                let condition = '';
+                for (value of valueArr) {
+                    condition += `'${value}',`;
+                }
+                condition = condition.substring(0, condition.length-1);
+                whereClause += `${key} IN (${condition}) AND `
+            }
+        }
+        whereClause = whereClause.substring(0, whereClause.length-4);
+
+        query += whereClause;
+        }
+    query += ";";
+    return query;
+}
+
+// API-2 get todo api
+app.get("/todos/:todoId", (req, res) => {
+    const {todoId} = req.params
+    const query = `SELECT * FROM todo WHERE id=${todoId};`
+    connection.query(query, (error, results) => {
+        if(error){
+            console.log(error.message);
+            res.status(502);
+            return;
+        }
+        res.send(results[0]);
     });
 })
 
-// Delete Person Api
-app.delete("/users/:id", (req, res) => {
-    const {id} = req.params;
-    pool.query(`DELETE FROM persons WHERE id=${id};`, (error, result) => {
-        if(error){
-            res.status(502).send(`Bad Gateway`);
-        }else{
-            res.send(`Successfully Deleted the user id: ${id}`);
-        }
-    })
-});
+// API-3 Add todo api
+app.post("/todos", (req, res) => {
+    const todoBody = req.body;
+    const {todo, priority, status} = todoBody;
+    const validations = checkPostValidations(todoBody);
 
+    if(validations.error){
+        res.status(400).send(validations.error.details[0].message);
+    }
+
+    const postQuery = `INSERT INTO todo (todo, priority, status)
+    VALUES('${todo}', '${priority}', '${status}');`;
+    
+    connection.query(postQuery, (error, result) => {
+        if(error){
+            console.log(error.message);
+            res.status(502);
+            return;
+        }
+        res.send(`Todo Successfully Added Todo Id: ${result.insertId}`);
+    })
+})
+
+// Function to check the validation of todo body details 
+const checkPostValidations = (todoBody) => {
+    const joiSchema = {
+        todo: Joi.string().min(3).required(),
+        priority: Joi.string().valid(...priorityConstants),
+        status: Joi.string().valid(...statusConstants)
+    }
+    return Joi.validate(todoBody, joiSchema);
+}
 
 app.listen(port, () => {
-    console.log(`Listening on port and running on http://localhost:${port}`);
+    console.log('Server is up and running on http://localhost:8080');
 });

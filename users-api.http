@@ -1,0 +1,35 @@
+# Get All the list of users
+GET http://localhost:8080/users/
+
+###
+
+# Get the specific user details by ID
+GET http://localhost:8080/user/10
+
+###
+
+# Add New User
+POST http://localhost:8080/users/
+Content-Type: application/json
+
+{
+    "first_name": "Raju",
+    "last_name": "Kumar",
+    "age": 27,
+    "city":"London"
+}
+
+###
+
+# Updated the user 
+PUT http://localhost:8080/users/10
+Content-Type: application/json
+
+{
+    "last_name": "Dinesh",
+    "age": 22
+}
+
+###
+# Delete the user details
+DELETE http://localhost:8080/users/10

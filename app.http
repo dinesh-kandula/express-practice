@@ -1,6 +1,6 @@
 ###
 # API-1 Get All todo's
-GET http://localhost:8080/todos/?priority=HIGH
+GET http://localhost:8080/todos/
 
 ###
 # API-2 Get todo

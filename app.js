@@ -1,7 +1,7 @@
 // This module is desgined for ToDo's application
 
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const Joi = require('joi');
 
 const app = express();
@@ -13,7 +13,6 @@ const priorityConstants = ["HIGH","MEDIUM","LOW"];
 const statusConstants = ["TO DO", "IN PROGRESS", "DONE"];
 
 const connection = mysql.createConnection({
-    connectionLimit : 10,
     host : 'localhost',
     user : 'root',
     password: 'Techv1@3',
@@ -22,7 +21,7 @@ const connection = mysql.createConnection({
 
 connection.connect(function(error) {
     if (error) {
-      console.error('error connecting: ' + error.stack);
+      console.error('DB error connecting: ' + error.stack);
       return;
     }   
     console.log('DB connected');

@@ -113,17 +113,13 @@ app.put("/users/:id", (req, res) => {
     `
 
     pool.query(`SELECT * FROM persons WHERE id=${id};`, (error, results) => {
-        if (error) {
-            res.status(502).send(`Bad Gateway`);
-        }
-        if (results.length === 0) {
-            res.status(404).send(`No User found to update the details with user ID - ${id}`);
-        }
+        if (error) return res.status(502).send(`Bad Gateway`);
+        if (results.length === 0) return res.status(404).send(`No User found to update the details with user ID - ${id}`);
     });
 
     pool.query(updateQuery, (error, result) => {
         if(error){
-            res.status(502).send(`Bad Gateway`);
+            return res.status(502).send(`Bad Gateway`);
         }else{
             res.send(`Updated the user details, user id: ${id}`);
         }
@@ -135,7 +131,7 @@ app.delete("/users/:id", (req, res) => {
     const {id} = req.params;
     pool.query(`DELETE FROM persons WHERE id=${id};`, (error, result) => {
         if(error){
-            res.status(502).send(`Bad Gateway`);
+            return res.status(502).send(`Bad Gateway`);
         }else{
             res.send(`Successfully Deleted the user id: ${id}`);
         }

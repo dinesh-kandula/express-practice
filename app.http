@@ -4,15 +4,29 @@ GET http://localhost:8080/todos/
 
 ###
 # API-2 Get todo
-GET http://localhost:8080/todos/4
+GET http://localhost:8080/todos/10
 
 ###
-#API -3 add todo
+#API -3 Add todo
 POST http://localhost:8080/todos
 Content-Type: application/json
 
 {
-  "todo": "Run",
-  "priority": "MEDIUM",
-  "status": "TO DO"
+  "todo": "Complete the Setup of project and MySQL in my PC",
+  "priority": "HIGH",
+  "status": "DONE"
 }
+
+###
+#API-4 Update todo
+PUT http://localhost:8080/todos/1
+Content-Type: application/json
+
+{
+  "status": "DONE",
+  "priority": "MEDIUM"
+}
+
+###
+# API-5 Get todo
+DELETE http://localhost:8080/todos/10

@@ -63,7 +63,6 @@ const allTodosQueryWithFilters = (queryParams) => {
             }
         }
         whereClause = whereClause.substring(0, whereClause.length-4);
-
         query += whereClause;
         }
     query += ";";
@@ -80,7 +79,7 @@ app.get("/todos/:todoId", (req, res) => {
             res.status(502);
             return;
         }
-        res.send(results[0]);
+        res.send(results);
     });
 })
 
@@ -90,12 +89,9 @@ app.post("/todos", (req, res) => {
     const {todo, priority, status} = todoBody;
     const validations = checkPostValidations(todoBody);
 
-    if(validations.error){
-        res.status(400).send(validations.error.details[0].message);
-    }
-
-    const postQuery = `INSERT INTO todo (todo, priority, status)
-    VALUES('${todo}', '${priority}', '${status}');`;
+    if(validations.error) return res.status(400).send(validations.error.details[0].message);
+    
+    const postQuery = `INSERT INTO todo (todo, priority, status) VALUES('${todo}', '${priority}', '${status}');`;
     
     connection.query(postQuery, (error, result) => {
         if(error){
@@ -117,6 +113,76 @@ const checkPostValidations = (todoBody) => {
     return Joi.validate(todoBody, joiSchema);
 }
 
+// API-4 Update the todo
+app.put("/todos/:todoId", (req, res) => {
+    const {todoId} = req.params;
+    const todoBody = req.body
+
+    // Update Query
+    let setQuery = `SET `
+    for (let key in todoBody){
+        setQuery += (`${key}='${todoBody[key]}',`)
+    }
+    setQuery = setQuery.substring(0, setQuery.length-1);
+    const updateQuery = `
+    UPDATE todo
+    ${setQuery}
+    WHERE id=${todoId};
+    `
+
+    // Validation of Body Object
+    const {error} = checkUpdateValidations(todoBody);
+    if(error) return res.status(400).send(error.details[0].message);
+    
+    // Validating weather the todoId is valid 
+    const query = `SELECT * FROM todo WHERE id=${todoId};`
+    connection.query(query, (error, results) => {
+        if(error){
+            console.log(error.message);
+            res.status(502);
+            return;
+        }
+        if(results.length === 0) { 
+            res.status(404).send(`No todo found with todoId: ${todoId}`);
+            return;
+        }else{
+             // Executing the Update Query
+            connection.query(updateQuery, (error, result) => {
+                if(error){
+                    return res.status(502).send(`Bad Gateway`);
+                }else{
+                    res.send(`Updated the todo, todoId: ${todoId}`);
+                }
+            })
+        }
+    });
+})
+
+// Function to check the validation of todo body details for updating
+const checkUpdateValidations = (todoBody) => {
+    const joiSchema = {
+        todo: Joi.string().min(3),
+        priority: Joi.string().valid(...priorityConstants),
+        status: Joi.string().valid(...statusConstants)
+    }
+    return Joi.validate(todoBody, joiSchema);
+}
+
+
+// API-5 Delte Todo
+app.delete("/todos/:todoId/", (req, res) => {
+    const {todoId} = req.params
+    connection.query(`DELETE FROM todo WHERE id=${todoId};`, (error, result) => {
+        if(error){
+            return res.status(502).send(`Bad Gateway`);
+        }else{
+            res.send(`Todo Deleted, todo id: ${todoId}`);
+        }
+    })
+})
+
+
+// Listener
 app.listen(port, () => {
     console.log('Server is up and running on http://localhost:8080');
 });

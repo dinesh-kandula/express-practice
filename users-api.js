@@ -93,6 +93,7 @@ app.put("/users/:id", (req, res) => {
     const {id} = req.params;
     const bodyObj = req.body;
    
+    // Update 
     let setQuery = `SET `;
     for (let key in bodyObj){
         switch (key) {
@@ -105,7 +106,6 @@ app.put("/users/:id", (req, res) => {
         };
     }
     setQuery = setQuery.substring(0, setQuery.length-1);
-
     const updateQuery = `
     UPDATE persons
     ${setQuery}
@@ -114,16 +114,20 @@ app.put("/users/:id", (req, res) => {
 
     pool.query(`SELECT * FROM persons WHERE id=${id};`, (error, results) => {
         if (error) return res.status(502).send(`Bad Gateway`);
-        if (results.length === 0) return res.status(404).send(`No User found to update the details with user ID - ${id}`);
-    });
-
-    pool.query(updateQuery, (error, result) => {
-        if(error){
-            return res.status(502).send(`Bad Gateway`);
+        if (results.length === 0){
+             return res.status(404).send(`No User found to update the details with user ID - ${id}`);
         }else{
-            res.send(`Updated the user details, user id: ${id}`);
+            pool.query(updateQuery, (error, result) => {
+                if(error){
+                    return res.status(502).send(`Bad Gateway`);
+                }else{
+                    res.send(`Updated the user details, user id: ${id}`);
+                }
+            });
         }
     });
+
+    
 })
 
 // Delete Person Api

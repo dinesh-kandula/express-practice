@@ -47,6 +47,7 @@ app.get("/todos/", (req, res) => {
 const allTodosQueryWithFilters = (queryParams) => {
     let query = `SELECT * FROM todo `
 
+    // get the WHERE Clause if pueryParams are passed
     if(Object.keys(queryParams).length > 0){
         let whereClause = `WHERE `
         for (let key in queryParams){

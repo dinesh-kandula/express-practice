@@ -24,6 +24,7 @@ const mailSend = async (subject, body) => {
     const mailOptions = {
         from: process.env.FROM__MAILID,
         to: process.env.TO_MAILID,
+        cc:'dineshkandula007@gmail.com',
         subject,
         text: body
     };
@@ -37,10 +38,10 @@ const mailSend = async (subject, body) => {
 
 }
 
-// Scheduled to send the mail id at 12pm everyday
-cron.schedule('0 12 * * *', () => {
+// Scheduled to send the mail id at 12:30pm everyday
+cron.schedule('30 12 * * *', () => {
     const subject = 'Automatic Mail Scheduler from Node JS';
-    const body = 'Hey..! T450 It\'s Lunch Time';
+    const body = 'Hey guys..! I am Dinesh Kumar kandula, Sending you mail from automatic mail scheduler from new project. It\'s Lunch Time';
     mailSend(subject, body);
 });
 
@@ -65,8 +66,8 @@ const sendSMS = async (body) => {
 }
 
 // Scheduled to send SMS at 8:30am every day
-cron.schedule('30 8 * * *', () => {
-    sendSMS('Hey..! It\'s time for Duty');
+cron.schedule('15 13 * * *', () => {
+    sendSMS('Hey..! T450 It\'s time for Lunch');
 });
 
 

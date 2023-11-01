@@ -1,6 +1,6 @@
 // This module contains the User details API's [CRUD practice]
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const path = require('path');
 
 const app = express();
@@ -22,7 +22,6 @@ const pool  = mysql.createPool({
 });
 
 const connection = mysql.createConnection({
-    connectionLimit : 10,
     host : 'localhost',
     user : 'root',
     password: 'Techv1@3',

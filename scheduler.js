@@ -3,7 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3001;
 
 // node-corn used for scheduling jobs
 const cron = require('node-cron');
@@ -39,10 +39,12 @@ const mailSend = async (subject, body) => {
 }
 
 // Scheduled to send the mail id at 12:30pm everyday
-cron.schedule('30 12 * * *', () => {
+cron.schedule('* * * * *', () => {
     const subject = 'Automatic Mail Scheduler from Node JS';
     const body = 'Hey guys..! I am Dinesh Kumar kandula, Sending you mail from automatic mail scheduler from new project. It\'s Lunch Time';
+    console.log("Sending Mail");
     mailSend(subject, body);
+    console.log("Mail Sent");
 });
 
 
@@ -66,9 +68,13 @@ const sendSMS = async (body) => {
 }
 
 // Scheduled to send SMS at 8:30am every day
-cron.schedule('15 13 * * *', () => {
-    sendSMS('Hey..! T450 It\'s time for Lunch');
+cron.schedule('* * * * *', () => {
+    console.log("Sending SMS");
+    sendSMS('Hey..! It\'s time for Duty');
+    console.log("SMS Sent")
 });
 
 
-app.listen(port);
+app.listen(port, () => { 
+    console.log(`Server is running...! ${"Hello"}`);
+});

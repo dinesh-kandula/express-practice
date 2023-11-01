@@ -39,7 +39,7 @@ const mailSend = async (subject, body) => {
 }
 
 // Scheduled to send the mail id at 12:30pm everyday
-cron.schedule('* * * * *', () => {
+cron.schedule('0 12 * * *', () => {
     const subject = 'Automatic Mail Scheduler from Node JS';
     const body = 'Hey guys..! I am Dinesh Kumar kandula, Sending you mail from automatic mail scheduler from new project. It\'s Lunch Time';
     console.log("Sending Mail");
@@ -68,13 +68,13 @@ const sendSMS = async (body) => {
 }
 
 // Scheduled to send SMS at 8:30am every day
-cron.schedule('* * * * *', () => {
+cron.schedule('30 8 * * *', () => {
     console.log("Sending SMS");
-    sendSMS('Hey..! It\'s time for Duty');
+    sendSMS('Hey..!  I am Dinesh Kumar kandula, Sending you SMS from automatic message scheduler from new project. It\'s time for Duty');
     console.log("SMS Sent")
 });
 
 
 app.listen(port, () => { 
-    console.log(`Server is running...! ${"Hello"}`);
+    console.log(`Server is running...!`);
 });

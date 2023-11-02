@@ -32,6 +32,7 @@ const mailSend = async (subject, body) => {
     try{
         const info = await transporter.sendMail(mailOptions);
         console.log('Email sent: ' + info.response);
+        console.log("Mail Sent");
     }catch (error){
         console.log(error);
     }
@@ -39,12 +40,11 @@ const mailSend = async (subject, body) => {
 }
 
 // Scheduled to send the mail id at 12:30pm everyday
-cron.schedule('0 12 * * *', () => {
+cron.schedule('0 11 * * *', () => {
     const subject = 'Automatic Mail Scheduler from Node JS';
     const body = 'Hey guys..! I am Dinesh Kumar kandula, Sending you mail from automatic mail scheduler from new project. It\'s Lunch Time';
     console.log("Sending Mail");
     mailSend(subject, body);
-    console.log("Mail Sent");
 });
 
 
@@ -68,7 +68,7 @@ const sendSMS = async (body) => {
 }
 
 // Scheduled to send SMS at 8:30am every day
-cron.schedule('30 8 * * *', () => {
+cron.schedule('0 11 * * *', () => {
     console.log("Sending SMS");
     sendSMS('Hey..!  I am Dinesh Kumar kandula, Sending you SMS from automatic message scheduler from new project. It\'s time for Duty');
     console.log("SMS Sent")

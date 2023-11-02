@@ -74,6 +74,13 @@ cron.schedule('0 11 * * *', () => {
     console.log("SMS Sent")
 });
 
+//this middle function is used to run static HTML page
+app.use(express.static(path.join(__dirname, 'TechVedikaClone'))); 
+
+// Api will send HTML Content as response
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'TechVedikaClone', './index.html')); //sending html file page
+});
 
 app.listen(port, () => { 
     console.log(`Server is running...!`);

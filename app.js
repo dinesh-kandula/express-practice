@@ -115,7 +115,69 @@ const checkPostValidations = (todoBody) => {
 }
 
 // API-4 Update the todo
-app.put("/todos/:todoId", (req, res) => {
+// app.put("/todos/:todoId", async (req, res) => {
+//     const {todoId} = req.params;
+//     const todoBody = req.body
+
+//     // Update Query
+//     let setQuery = `SET `
+//     for (let key in todoBody){
+//         setQuery += (`${key}='${todoBody[key]}',`)
+//     }
+//     setQuery = setQuery.substring(0, setQuery.length-1);
+//     const updateQuery = `
+//     UPDATE todo
+//     ${setQuery}
+//     WHERE id=${todoId};
+//     `
+
+//     // Validation of Body Object
+//     const {error} = await checkUpdateValidations(todoBody);
+//     if(error) return res.status(400).send(error.details[0].message);
+    
+
+//     // Validating weather the todoId is valid 
+//     const query = `SELECT * FROM todo WHERE id=${todoId};`
+
+//     connection.query(query, (error, results) => {
+//         if(error){
+//             console.log(error.message);
+//             res.status(502);
+//             return;
+//         }
+//         if(results.length === 0) { 
+//             res.status(404).send(`No todo found with todoId: ${todoId}`);
+//             return;
+//         }else{
+//              // Executing the Update Query
+//             connection.query(updateQuery, (error, result) => {
+//                 if(error){
+//                     return res.status(502).send(`Bad Gateway`);
+//                 }else{
+//                     res.send(`Updated the todo, todoId: ${todoId}`);
+//                 }
+//             })
+//         }
+//     });
+// })
+// Function to execute a MySQL query
+function executeQuery(sql, values) {
+    return new Promise((resolve, reject) => {
+        if(arguments.length == 1){
+            connection.query(sql,(error, results) => {
+                if (error) reject(error);
+                else resolve(results);
+            });
+        }else{
+            connection.query(sql, values, (error, results) => {
+                if (error) reject(error);
+                else resolve(results);
+            });
+        }
+    });
+}
+
+app.put("/todos/:todoId", async (req, res) => {
     const {todoId} = req.params;
     const todoBody = req.body
 
@@ -130,34 +192,29 @@ app.put("/todos/:todoId", (req, res) => {
     ${setQuery}
     WHERE id=${todoId};
     `
+    const fetchQuery = `SELECT * FROM todo WHERE id=?;`
 
-    // Validation of Body Object
-    const {error} = checkUpdateValidations(todoBody);
-    if(error) return res.status(400).send(error.details[0].message);
+    let fetchResult;
+    try {
+        fetchResult = await executeQuery(fetchQuery, todoId);
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
+
+    if(fetchResult.length === 0){
+        res.status(404).send(`No todo found with todoId: ${todoId}`);
+        return;
+    }
     
-    // Validating weather the todoId is valid 
-    const query = `SELECT * FROM todo WHERE id=${todoId};`
-    connection.query(query, (error, results) => {
-        if(error){
-            console.log(error.message);
-            res.status(502);
-            return;
-        }
-        if(results.length === 0) { 
-            res.status(404).send(`No todo found with todoId: ${todoId}`);
-            return;
-        }else{
-             // Executing the Update Query
-            connection.query(updateQuery, (error, result) => {
-                if(error){
-                    return res.status(502).send(`Bad Gateway`);
-                }else{
-                    res.send(`Updated the todo, todoId: ${todoId}`);
-                }
-            })
-        }
-    });
+    console.log("Executing update query...!");
+    try{
+        await executeQuery(updateQuery);
+        res.send(`Updated the todo, todoId: ${todoId}`);
+    }catch(error){
+        console.error('An error occurred:', error);
+    }
 })
+   
 
 // Function to check the validation of todo body details for updating
 const checkUpdateValidations = (todoBody) => {

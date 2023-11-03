@@ -49,31 +49,35 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const mailSend = async (to, cc, subject, text) => {
+const mailSend =  (to, cc, subject, text) => {
     const mailOptions = 
     {from: process.env.FROM__MAILID, to, cc, subject, text};
     
-    try{
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
-    }catch (error){ 
-        console.log(error);
-    }
+    return new Promise(async (resolve, reject) => {
+        try{
+            const info = await transporter.sendMail(mailOptions);
+            resolve('Email sent: ' + info.response + '\r\n Emailed To: ' + to);
+         }catch (error){ 
+            reject(error);
+         }
+    })
+
+    
 }
 
 // Scheduled to send the mail to everyone
-cron.schedule('2 19 * * *', async() => {
-    const subject = 'Automatic Mail Scheduler from Node JS';
-    const body = 'Hey guys..! Sending to all of you at a time..';
+cron.schedule('0 16 * * *', async() => {
+    const subject = 'Good Evening its 6PM';
+    const body = 'Hey guys..!';
     const to = await getAllMailids();
-    const cc = await getSpecificMailid(1);
+    const cc = await getSpecificMailid(6);
     console.log("Sending Mail");
     mailSend(to, cc, subject, body);
 });
 
-cron.schedule('5 19 * * *', async() => {
-    const subject = 'Automatic Mailer Scheduler from Node JS';
-    const body = 'Hey..! Sending to you only..';
+cron.schedule('55 17 * * *', async() => {
+    const subject = 'Sending Sending....!';
+    const body = 'Hey..! Good Evening Sending Sending..';
     const to = await getSpecificMailid(6);
     console.log("Sending Mail");
     mailSend(to, '', subject, body);
@@ -84,7 +88,8 @@ async function getSpecificMailid(id) {
     const fetchQuery = 'SELECT emailid FROM email WHERE id=?';
     try{
         const result = await executeQuery(fetchQuery, [id]);
-        return(result[0].emailid)
+        if(result.length === 0) return("")
+        else return(result[0].emailid)
     }catch(error){
         console.error('An error occurred:', error);
     } 
@@ -103,6 +108,66 @@ async function getAllMailids() {
     } 
 }
 
+async function getSpecificMailidByDesignation(designation) {
+    const fetchQuery = 'SELECT emailid FROM email WHERE designation=?';
+    try{
+        const result = await executeQuery(fetchQuery, [designation]);
+        let emailArr = []
+        await result.forEach(each => {emailArr.push(each.emailid);});
+        const emailString = emailArr.join(",");
+        return emailString
+    }catch(error){
+        console.error('An error occurred:', error);
+    } 
+}
+
+app.post("/mail/:id", async (request, response) => {
+    const {id} = request.params;
+    const {cc, subject, body} = request.body
+
+    let to;
+    if(id === "All" || id === ""){
+        to = await getAllMailids();
+    }else{
+        to = await getSpecificMailid(id)
+    }
+
+    if(to){
+        try{
+            const mailResponse = await mailSend(to, cc, subject, body);
+            response.send(mailResponse);
+        }catch(error){
+            response.status(503).send(error);
+        }
+    }else{
+        response.status(404).send(`Mail id: ${id} (Not found in the Database)`);
+    }
+})
+
+app.post("/mail/", async (request, response) => {
+    const {designation} = request.query;
+    const {cc, subject, body} = request.body
+
+    let to = await getSpecificMailidByDesignation(designation);
+    
+    if(to){
+        try{
+            const mailResponse = await mailSend(to, cc, subject, body);
+            response.send(mailResponse);
+        }catch(error){
+            response.status(503).send(error);
+        }
+    }else{
+        response.status(404).send(`Mail with designation: ${designation} (Not found in the Database)`);
+    }
+})
+
+
+
+
+
+
+/* ------------ SMS twilio ------------- */
 
 // SMS twilio Package
 const client = require('twilio')(process.env.ACCOUNT_SID,  process.env.AUTH_TOKEN);
@@ -131,5 +196,5 @@ cron.schedule('30 8 * * *', () => {
 });
 
 app.listen(process.env.PORT, () => { 
-    console.log(`Server is running...!`);
+    console.log(`Server is running on ${process.env.PORT}...!`);
 });

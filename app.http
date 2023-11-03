@@ -30,3 +30,29 @@ Content-Type: application/json
 ###
 # API-5 Get todo
 DELETE http://localhost:8080/todos/10
+
+
+###
+POST http://localhost:3001/mail/:id
+Content-Type: application/json
+
+{
+  "subject": "Sending from API to All Teahcers",
+  "body": "Sending you the Mail id from by calling API to only to Teachers"
+}
+
+###
+POST http://localhost:3001/mail/?designation=parent
+Content-Type: application/json
+
+{
+  "subject": "Sending from API to All parent",
+  "body": "Sending you the Mail id from by calling API to only to parent"
+}
+
+# Scenario 1 >> directly send to single mail id
+# POST http://localhost:3001/mail/6 
+# Scenario 2 >> directly send to all available mail id's
+# POST http://localhost:3001/mail/All or POST http://localhost:3001/mail/
+# Scenario 3 >> directly send to whose mail id is [teacher,student,parent]
+# POST http://localhost:3001/mail/?designation=teacher 
